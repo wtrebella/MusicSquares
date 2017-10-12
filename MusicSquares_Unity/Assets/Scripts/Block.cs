@@ -38,17 +38,40 @@ public class Block : MonoBehaviour {
 
 	public Vector3 GetSize()
 	{
-		return _size;
+		if (_boxCollider != null)
+		{
+			return _size;
+		}
+		else
+		{
+			// hacky: for if a non-instantiated object (for example: prefab) needs to give its size
+			_boxCollider = GetComponentInChildren<BoxCollider>();
+			_size = new Vector3
+				(
+					_boxCollider.size.x * _boxCollider.transform.localScale.x,
+					_boxCollider.size.y * _boxCollider.transform.localScale.y,
+					_boxCollider.size.z * _boxCollider.transform.localScale.z
+				);
+			return _size;
+		}
 	}
 
-	public void SetX(int x)
+	public void ResetBlock()
+	{
+		RandomizeColor();
+	}
+
+	public void SetCoord(int x, int z)
 	{
 		_x = x;
-	}
-
-	public void SetZ(int z)
-	{
 		_z = z;
+
+		name = "Block (" + x + ", " + z + ")";
+		Vector3 pos = new Vector3();
+		pos.x = _size.x * x;
+		pos.y = -_size.y / 2f;
+		pos.z = _size.z * z;
+		transform.position = pos;
 	}
 
 	public int GetX()
