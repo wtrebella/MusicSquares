@@ -250,8 +250,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _blockPrefab: {fileID: 114751310527090988, guid: c84be4d5766b6477a903463c894cb255,
     type: 2}
-  _xExtant: 1
-  _zExtant: 1
+  _xExtant: 2
+  _zExtant: 2
 --- !u!4 &831148329
 Transform:
   m_ObjectHideFlags: 0

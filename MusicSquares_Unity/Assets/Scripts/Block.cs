@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Block : MonoBehaviour {
+	[SerializeField] private AnimationCurve _scaleCurve;
+	[SerializeField] private Vector3 _minScale = new Vector3(0.5f, 1.0f, 0.5f);
+
 	private BoxCollider _boxCollider;
 	private int _x;
 	private int _z;
 	private Vector3 _size;
 	private MeshRenderer _meshRenderer;
+	private bool _isFocused = false;
+	private float _timer = 0;
 
 	void Awake()
 	{
@@ -24,10 +29,44 @@ public class Block : MonoBehaviour {
 		RandomizeColor();
 	}
 
+	public void Focus()
+	{
+		_isFocused = true;
+	}
+
+	public void Unfocus()
+	{
+		_isFocused = false;
+		transform.localScale = Vector3.one;
+	}
+
+	void Update()
+	{
+		if (_isFocused)
+		{
+			UpdateScaling();
+		}
+	}
+
+	void UpdateScaling()
+	{
+		_timer += Time.deltaTime;
+		if (_timer >= Metronome.instance.GetBeatDur())
+		{
+			_timer = 0;
+		}
+
+		Vector3 scale = Vector3.Lerp(_minScale, Vector3.one, _scaleCurve.Evaluate(_timer));
+		transform.localScale = scale;
+	}
+
 	void RandomizeColor()
 	{
 		Color c = GetRandomColor();
-		_meshRenderer.material.color = c;
+
+		MaterialPropertyBlock propBlock = new MaterialPropertyBlock();
+		propBlock.SetColor("_Color", c);
+		_meshRenderer.SetPropertyBlock(propBlock);
 	}
 
 	Color GetRandomColor()
