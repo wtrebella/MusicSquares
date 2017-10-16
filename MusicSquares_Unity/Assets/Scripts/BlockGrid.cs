@@ -137,6 +137,11 @@ public class BlockGrid : MonoBehaviour {
 		_focusedBlock = focusedBlock;
 	}
 
+	public Block GetFocusBlock()
+	{
+		return _grid[_zExtant][_xExtant];
+	}
+
 	int GetMinX()
 	{
 		return _xCenter - _xExtant;

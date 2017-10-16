@@ -12,7 +12,8 @@ public class Block : MonoBehaviour {
 	private Vector3 _size;
 	private MeshRenderer _meshRenderer;
 	private bool _isFocused = false;
-	private float _timer = 0;
+	private Vector3 _targetScale = Vector3.one;
+	private bool _isDirty = false;
 
 	void Awake()
 	{
@@ -27,11 +28,34 @@ public class Block : MonoBehaviour {
 		);
 
 		RandomizeColor();
+		Metronome.instance.SignalBeat += OnBeat;
+	}
+
+	void OnDestroy()
+	{
+		if (Metronome.DoesExist())
+		{
+			Metronome.instance.SignalBeat -= OnBeat;
+		}
+	}
+
+	void OnBeat(int beat)
+	{
+
 	}
 
 	public void Focus()
 	{
 		_isFocused = true;
+	}
+
+	void Update()
+	{
+		if (_isDirty)
+		{
+			transform.localScale = _targetScale;
+			_isDirty = false;
+		}
 	}
 
 	public void Unfocus()
@@ -40,24 +64,19 @@ public class Block : MonoBehaviour {
 		transform.localScale = Vector3.one;
 	}
 
-	void Update()
+	void OnAudioFilterRead(float[] data, int channels)
 	{
 		if (_isFocused)
 		{
 			UpdateScaling();
+			_isDirty = true;
 		}
 	}
 
 	void UpdateScaling()
 	{
-		_timer += Time.deltaTime;
-		if (_timer >= Metronome.instance.GetBeatDur())
-		{
-			_timer = 0;
-		}
-
-		Vector3 scale = Vector3.Lerp(_minScale, Vector3.one, _scaleCurve.Evaluate(_timer));
-		transform.localScale = scale;
+		float beatPercent = Metronome.instance.GetBeatPercent();
+		_targetScale = Vector3.Lerp(_minScale, Vector3.one, _scaleCurve.Evaluate(beatPercent));
 	}
 
 	void RandomizeColor()

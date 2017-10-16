@@ -1,81 +1,146 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System;
 
+[RequireComponent(typeof(AudioSource))]
 public class Metronome : Singleton<Metronome> {
-	public Action SignalPhrase;
-	public Action SignalMeasure;
-	public Action SignalBeat;
-	public Action SignalSixteenth;
+	public IntDelegate SignalPhrase;
+	public IntDelegate SignalMeasure;
+	public IntDelegate SignalBeat;
+	public IntDelegate SignalSixteenth;
 
-	[SerializeField] int bpm = 120;
-	[SerializeField] private bool resetDownbeatOnClick = false;
+	[SerializeField] private int bpm = 120;
+	[SerializeField] private int _preroll = 2;
 
-	float phraseDur;
-	float measureDur;
-	float beatDur;
-	float sixteenthDur;
-	double initTime;
-	double elapsedTime = 0;
-	int curBeat = 0;
-	int curSixteenth = 0;
-	int curMeasure = 0;
-	int curPhrase = 0;
+	private float _phraseDur;
+	private float _measureDur;
+	private float _beatDur;
+	private float _sixteenthDur;
+	private double _initTime;
+	private double _elapsedTime = 0;
+	private double _lastBeatTime = 0;
+	private int _curBeat = 0;
+	private int _curSixteenth = 0;
+	private int _curMeasure = 0;
+	private int _curPhrase = 0;
+	private bool _hasStarted = false;
 
 	void Awake() {
-		beatDur = 60f / bpm;
-		sixteenthDur = beatDur / 4f;
-		measureDur = beatDur * 4f;
-		phraseDur = measureDur * 4f;
-
-		initTime = AudioSettings.dspTime;
+		_beatDur = 60f / bpm;
+		_sixteenthDur = _beatDur / 4f;
+		_measureDur = _beatDur * 4f;
+		_phraseDur = _measureDur * 4f;
 	}
 
 	void ResetDownbeat()
 	{
-		initTime = AudioSettings.dspTime;
-		elapsedTime = 0;
-		curBeat = 0;
-		curSixteenth = 0;
-		curMeasure = 0;
-		curPhrase = 0;
+		_initTime = AudioSettings.dspTime;
+		_elapsedTime = 0;
+		_curBeat = 0;
+		_curSixteenth = 0;
+		_curMeasure = 0;
+		_curPhrase = 0;
+		_lastBeatTime = 0;
 	}
 
-	void Update() {
-		if (resetDownbeatOnClick)
+	void OnAudioFilterRead(float[] data, int channels)
+	{
+		if (!_hasStarted)
 		{
-			if (Input.GetMouseButtonDown(0))
+			int preroll = (int)(AudioSettings.dspTime / _beatDur);
+			if (preroll >= _preroll)
 			{
-				ResetDownbeat();
+				StartMetronome();
+			}
+			else
+			{
+				return;
 			}
 		}
 
-		elapsedTime = AudioSettings.dspTime - initTime;
+		_elapsedTime = AudioSettings.dspTime - _initTime;
 
-		int sixteenth = (int)(elapsedTime / sixteenthDur);
-		if (sixteenth > curSixteenth) {
-			curSixteenth = sixteenth;
-			if (SignalSixteenth != null) SignalSixteenth ();
-			if (curSixteenth % 4 == 0) {
-				curBeat++;
-				if (SignalBeat != null) SignalBeat ();
+		int sixteenth = (int)(_elapsedTime / _sixteenthDur);
+		int beat = (int)(_elapsedTime / _beatDur);
+		int measure = (int)(_elapsedTime / _measureDur);
+		int phrase = (int)(_elapsedTime / _phraseDur);
 
-				if (curBeat % 4 == 0) {
-					curMeasure++;
-					if (SignalMeasure != null) SignalMeasure ();
-
-					if (curMeasure % 4 == 0) {
-						curPhrase++;
-						if (SignalPhrase != null) SignalPhrase();
-					}
-				}
-			}
+		if (phrase > _curPhrase)
+		{
+			_curPhrase = phrase;
+			if (SignalPhrase != null) SignalPhrase(_curPhrase);
 		}
+
+		if (measure > _curMeasure)
+		{
+			_curMeasure = measure;
+			if (SignalMeasure != null) SignalMeasure (_curMeasure);
+		}
+
+		if (beat > _curBeat)
+		{
+			_lastBeatTime = _elapsedTime;
+			_curBeat = beat;
+			if (SignalBeat != null) SignalBeat (_curBeat);
+		}
+
+		if (sixteenth > _curSixteenth)
+		{
+			_curSixteenth = sixteenth;
+			if (SignalSixteenth != null) SignalSixteenth (_curSixteenth);
+		}
+	}
+
+	private void StartMetronome()
+	{
+		_initTime = AudioSettings.dspTime;
+		_hasStarted = true;
+	}
+
+	public float GetBeatPercent()
+	{
+		float timeSinceLastBeat = (float)(_elapsedTime - _lastBeatTime);
+		float percent = timeSinceLastBeat / _beatDur;
+		return percent;
+	}
+
+	public float GetSixteenthDur()
+	{
+		return _sixteenthDur;
 	}
 
 	public float GetBeatDur()
 	{
-		return beatDur;
+		return _beatDur;
+	}
+
+	public float GetMeasureDur()
+	{
+		return _measureDur;
+	}
+
+	public float GetPhraseDur()
+	{
+		return _phraseDur;
+	}
+
+	public int GetCurSixteenth()
+	{
+		return _curSixteenth;
+	}
+
+	public int GetCurBeat()
+	{
+		return _curBeat;
+	}
+
+	public int GetCurMeasure()
+	{
+		return _curMeasure;
+	}
+
+	public int GetCurPhrase()
+	{
+		return _curPhrase;
 	}
 
 	public float GetBPM()
@@ -85,6 +150,6 @@ public class Metronome : Singleton<Metronome> {
 
 	public float GetPhrasePercent() 
 	{
-		return ((float)elapsedTime % phraseDur) / phraseDur;
+		return ((float)_elapsedTime % _phraseDur) / _phraseDur;
 	}
 }
