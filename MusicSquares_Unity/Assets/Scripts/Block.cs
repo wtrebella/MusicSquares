@@ -28,14 +28,14 @@ public class Block : MonoBehaviour {
 		);
 
 		RandomizeColor();
-		Metronome.instance.SignalBeat += OnBeat;
+		Metronome.instance.SignalBeatImmediate += OnBeat;
 	}
 
 	void OnDestroy()
 	{
 		if (Metronome.DoesExist())
 		{
-			Metronome.instance.SignalBeat -= OnBeat;
+			Metronome.instance.SignalBeatImmediate -= OnBeat;
 		}
 	}
 

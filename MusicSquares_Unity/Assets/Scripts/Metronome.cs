@@ -3,12 +3,17 @@ using System.Collections;
 
 [RequireComponent(typeof(AudioSource))]
 public class Metronome : Singleton<Metronome> {
+	public IntDelegate SignalPhraseImmediate;
+	public IntDelegate SignalMeasureImmediate;
+	public IntDelegate SignalBeatImmediate;
+	public IntDelegate SignalSixteenthImmediate;
+
 	public IntDelegate SignalPhrase;
 	public IntDelegate SignalMeasure;
 	public IntDelegate SignalBeat;
 	public IntDelegate SignalSixteenth;
 
-	[SerializeField] private int bpm = 120;
+	[SerializeField] private int _bpm = 120;
 	[SerializeField] private int _preroll = 2;
 
 	private float _phraseDur;
@@ -23,9 +28,13 @@ public class Metronome : Singleton<Metronome> {
 	private int _curMeasure = 0;
 	private int _curPhrase = 0;
 	private bool _hasStarted = false;
+	private bool _signalPhrase = false;
+	private bool _signalMeasure = false;
+	private bool _signalBeat = false;
+	private bool _signalSixteenth = false;
 
 	void Awake() {
-		_beatDur = 60f / bpm;
+		_beatDur = 60f / _bpm;
 		_sixteenthDur = _beatDur / 4f;
 		_measureDur = _beatDur * 4f;
 		_phraseDur = _measureDur * 4f;
@@ -40,6 +49,30 @@ public class Metronome : Singleton<Metronome> {
 		_curMeasure = 0;
 		_curPhrase = 0;
 		_lastBeatTime = 0;
+	}
+
+	void Update()
+	{
+		if (_signalPhrase)
+		{
+			_signalPhrase = false;
+			if (SignalPhrase != null) SignalPhrase(_curPhrase);
+		}
+		if (_signalMeasure)
+		{
+			_signalMeasure = false;
+			if (SignalMeasure != null) SignalMeasure(_curMeasure);
+		}
+		if (_signalBeat)
+		{
+			_signalBeat = false;
+			if (SignalBeat != null) SignalBeat(_curBeat);
+		}
+		if (_signalSixteenth)
+		{
+			_signalSixteenth = false;
+			if (SignalSixteenth != null) SignalSixteenth(_curSixteenth);
+		}
 	}
 
 	void OnAudioFilterRead(float[] data, int channels)
@@ -67,26 +100,30 @@ public class Metronome : Singleton<Metronome> {
 		if (phrase > _curPhrase)
 		{
 			_curPhrase = phrase;
-			if (SignalPhrase != null) SignalPhrase(_curPhrase);
+			_signalPhrase = true;
+			if (SignalPhraseImmediate != null) SignalPhraseImmediate(_curPhrase);
 		}
 
 		if (measure > _curMeasure)
 		{
 			_curMeasure = measure;
-			if (SignalMeasure != null) SignalMeasure (_curMeasure);
+			_signalMeasure = true;
+			if (SignalMeasureImmediate != null) SignalMeasureImmediate (_curMeasure);
 		}
 
 		if (beat > _curBeat)
 		{
 			_lastBeatTime = _elapsedTime;
 			_curBeat = beat;
-			if (SignalBeat != null) SignalBeat (_curBeat);
+			_signalBeat = true;
+			if (SignalBeatImmediate != null) SignalBeatImmediate (_curBeat);
 		}
 
 		if (sixteenth > _curSixteenth)
 		{
 			_curSixteenth = sixteenth;
-			if (SignalSixteenth != null) SignalSixteenth (_curSixteenth);
+			_signalSixteenth = true;
+			if (SignalSixteenthImmediate != null) SignalSixteenthImmediate (_curSixteenth);
 		}
 	}
 
@@ -145,7 +182,7 @@ public class Metronome : Singleton<Metronome> {
 
 	public float GetBPM()
 	{
-		return bpm;
+		return _bpm;
 	}
 
 	public float GetPhrasePercent() 

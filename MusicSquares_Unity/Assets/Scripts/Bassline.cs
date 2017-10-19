@@ -3,25 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using Helm;
 
-public class NoteToPlay
+public class Bassline : MonoBehaviour
 {
-	public int note;
-	public float delay;
-
-	public NoteToPlay(int inNote, float inLength)
-	{
-		note = inNote;
-		delay = inLength;
-	}
-}
-
-public class Bassline : MonoBehaviour {
 	[SerializeField] private int _baseNote = 50;
 
 	private Sampler _sampler;
 	private int[] _measure;
 	private bool _isPlaying = false;
-	private List<NoteToPlay> _notesToPlay = new List<NoteToPlay>();
 
 	void Awake()
 	{
@@ -31,23 +19,39 @@ public class Bassline : MonoBehaviour {
 		Metronome.instance.SignalSixteenth += OnSixteenth;
 
 		_sampler = GetComponent<Sampler>();
-		_measure = new int[]
+//		_measure = new int[]
+//		{
+//			12, 10, 8, 7, 		// I
+//			0, 3, 7, 10,		// I
+//			12, 7, 10, 11,		// I
+//			12, 14, 15, 16,		// I
+//
+//			17, 9, 10, 11,		// IV
+//			12, 10, 3, 2,		// IV
+//			0, 2, 3, 4,			// I
+//			5, 6, 7, 6,			// I
+//
+//			7, 5, 7, 3,			// V
+//			5, 3, 10, 11,		// IV
+//			12, 0, 3, 1,		// I
+//			2, 8, 7, 11			// ii V
+//		};
+
+		RhythmicPhrase phrase = new RhythmicPhrase(4, 4);
+		for (int i = 0; i < 16; i++)
 		{
-			12, 10, 8, 7, 		// I
-			0, 3, 7, 10,		// I
-			12, 7, 10, 11,		// I
-			12, 14, 15, 16,		// I
+			if (Random.value < 0.5f) phrase.WriteNote(i / 4, i % 4, 1);
+			else phrase.WriteRest(i / 4, i % 4, 1);
+		}
 
-			17, 9, 10, 11,		// IV
-			12, 10, 3, 2,		// IV
-			0, 2, 3, 4,			// I
-			5, 6, 7, 6,			// I
-
-			7, 5, 7, 3,			// V
-			5, 3, 10, 11,		// IV
-			12, 0, 3, 1,		// I
-			2, 8, 7, 11			// ii V
-		};
+		NoteInput[] noteInputPhrase = phrase.GetPhrase();
+		_measure = new int[noteInputPhrase.Length];
+		for (int i = 0; i < noteInputPhrase.Length; i++)
+		{
+			NoteInput input = noteInputPhrase[i];
+			if (input == NoteInput.Start) _measure[i] = 0;
+			else if (input == NoteInput.Rest) _measure[i] = -100000;
+		}
 	}
 
 	void OnDestroy()
@@ -61,36 +65,9 @@ public class Bassline : MonoBehaviour {
 		}
 	}
 
-	void OnAudioFilterRead(float[] data, int channels)
-	{
-
-	}
-
-	void Update()
-	{
-		if (_notesToPlay.Count > 0)
-		{
-			for (int i = _notesToPlay.Count - 1; i >= 0; i--)
-			{
-				NoteToPlay note = _notesToPlay[i];
-				StartCoroutine(PlayNoteRoutine(note));
-				_notesToPlay.RemoveAt(i);
-			}
-		}
-	}
-
 	void OnBeat(int beat)
 	{
-		if (!_isPlaying) return;
-		int beatIndex = (beat - 1) % 36;
-		int note = _measure[beatIndex] + _baseNote;
-		PlayNote(note, Metronome.instance.GetBeatDur());
-	}
-
-	void PlayNote(int note, float delay)
-	{
-		NoteToPlay noteToPlay = new NoteToPlay(note, delay);
-		_notesToPlay.Add(noteToPlay);
+		
 	}
 
 	public void StartPlaying()
@@ -101,13 +78,6 @@ public class Bassline : MonoBehaviour {
 	public void StopPlaying()
 	{
 		_isPlaying = false;
-	}
-
-	IEnumerator PlayNoteRoutine(NoteToPlay note)
-	{
-		_sampler.NoteOn(note.note);
-		yield return new WaitForSeconds(note.delay);
-		_sampler.NoteOff(note.note);
 	}
 
 	void OnMeasure(int measure)
@@ -122,6 +92,10 @@ public class Bassline : MonoBehaviour {
 
 	void OnSixteenth(int sixteenth)
 	{
-
+		if (!_isPlaying) return;
+		int sixteenthIndex = (sixteenth - 1) % 16;
+		int note = _measure[sixteenthIndex] + _baseNote;
+		float beatDur = Metronome.instance.GetBeatDur();
+		_sampler.NoteOn(note, beatDur);
 	}
 }

@@ -27,7 +27,7 @@ public class GameCam : MonoBehaviour
 		FocusCoord.instance.SignalCoordChange += OnFocusCoordChange;
 		_blockSize = _blockPrefab.GetSize();
 		OnFocusCoordChange(0, 0);
-		Metronome.instance.SignalBeat += OnBeat;
+		Metronome.instance.SignalBeatImmediate += OnBeat;
 	}
 
 	void OnDestroy()
@@ -39,7 +39,7 @@ public class GameCam : MonoBehaviour
 
 		if (Metronome.DoesExist())
 		{
-			Metronome.instance.SignalBeat -= OnBeat;
+			Metronome.instance.SignalBeatImmediate -= OnBeat;
 		}
 	}
 
