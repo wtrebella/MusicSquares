@@ -75,7 +75,7 @@ public class Block : MonoBehaviour {
 
 	void UpdateScaling()
 	{
-		float beatPercent = Metronome.instance.GetBeatPercent();
+		float beatPercent = Metronome.instance.GetCurBeatPercent();
 		_targetScale = Vector3.Lerp(_minScale, Vector3.one, _scaleCurve.Evaluate(beatPercent));
 	}
 
