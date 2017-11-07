@@ -8,6 +8,7 @@ public class Fir : MonoBehaviour
 {
 	[SerializeField] private Transform _top;
 	[SerializeField] private Transform _trunk;
+	[SerializeField] private ParticleSystem _snow;
 
 	[SerializeField] private Vector2 _widthScaleMinMax = new Vector2(0.5f, 1.5f);
 	[SerializeField] private Vector2 _heightScaleMinMax = new Vector2(0.5f, 2.0f);
@@ -40,6 +41,18 @@ public class Fir : MonoBehaviour
 		Randomize();
 	}
 
+	void Start()
+	{
+		ParticleSystem.ShapeModule shape = _snow.shape;
+		float b = shape.length * Mathf.Tan (shape.angle * Mathf.Deg2Rad);
+		float h = shape.length * _top.transform.localScale.y;
+//		Debug.Log (shape.angle + ", " + (Mathf.Atan2 (shape.length, b) * Mathf.Rad2Deg));
+		float angle = 90 - Mathf.Atan2 (h, b) * Mathf.Rad2Deg;
+//		Debug.Log (b + ", " + h + ", " + angle);
+		shape.angle = angle;
+		shape.length = h;
+	}
+
 	void Update()
 	{
 		
@@ -49,6 +62,12 @@ public class Fir : MonoBehaviour
 	{
 		Shake();
 		PlayChord();
+		PlaySnow ();
+	}
+
+	void PlaySnow()
+	{
+		_snow.Play ();
 	}
 
 	void Randomize()
