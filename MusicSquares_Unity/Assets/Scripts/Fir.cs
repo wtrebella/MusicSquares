@@ -38,33 +38,19 @@ public class Fir : MonoBehaviour
 			_chord = Utils.Transpose(Chords.MinorNine, 9);
 		}
 
-		List<int> c = new List<int>();
-		for (int i = 0; i < _chord.Length; i++)
-		{
-			c.Add(_chord[i]);
-		}
-		c.Shuffle();
-		_chord = c.ToArray();
-		_chord = new int[] { _chord[0], _chord[1] };
+		_chord = Utils.ExtractRandom (_chord, 2);
 
 		Randomize();
 	}
 
-	void Start()
+	void UpdateSnowVolumeShape()
 	{
 		ParticleSystem.ShapeModule shape = _snow.shape;
 		float b = shape.length * Mathf.Tan(shape.angle * Mathf.Deg2Rad);
 		float h = shape.length * _top.transform.localScale.y;
-//		Debug.Log (shape.angle + ", " + (Mathf.Atan2 (shape.length, b) * Mathf.Rad2Deg));
 		float angle = 90 - Mathf.Atan2(h, b) * Mathf.Rad2Deg;
-//		Debug.Log (b + ", " + h + ", " + angle);
 		shape.angle = angle;
 		shape.length = h;
-	}
-
-	void Update()
-	{
-		
 	}
 
 	public void Hit()
@@ -96,6 +82,8 @@ public class Fir : MonoBehaviour
 		float angle = Random.Range(0, 360);
 		Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.up) * transform.localRotation;
 		transform.localRotation = rotation;
+
+		UpdateSnowVolumeShape ();
 	}
 
 	void Shake()
