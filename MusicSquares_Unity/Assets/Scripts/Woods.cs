@@ -37,7 +37,7 @@ public class Woods : MonoBehaviour
 
 	void OnDrawGizmos()
 	{
-		Gizmos.color = Color.green;
+		Gizmos.color = Color.blue;
 		Gizmos.DrawWireCube(transform.position + new Vector3(0, 10, 0), new Vector3(_size, 20, _size));
 	}
 }
