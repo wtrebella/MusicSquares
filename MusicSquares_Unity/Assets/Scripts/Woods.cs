@@ -9,9 +9,40 @@ public class Woods : MonoBehaviour
 	[SerializeField] private float _tileSize = 3.0f;
 	[SerializeField] private Fir _firPrefab;
 
+	NoteInput[] _phrase;
+
 	void Awake()
 	{
 		CreateTrees();
+		CreateRhythm ();
+
+		Metronome.instance.SignalEighth += OnEighth;
+	}
+
+	void OnEighth(int eighth)
+	{
+		eighth %= _phrase.Length;
+	}
+
+	void CreateRhythm()
+	{
+		int numBeats = 16;
+		int numDivisions = 2;
+
+		RhythmicPhrase rhythmicPhrase = new RhythmicPhrase (numBeats, numDivisions);
+
+		for (int beat = 0; beat < numBeats; beat++) {
+			for (int division = 0; division < numDivisions; division++)
+			{
+				if (Random.value < 0.3) {
+					rhythmicPhrase.WriteNote (beat, division, 1);
+				} else {
+					rhythmicPhrase.WriteRest (beat, division, 1);
+				}
+			}
+		}
+
+		_phrase = rhythmicPhrase.GetPhrase ();
 	}
 
 	void CreateTrees()

@@ -26,6 +26,17 @@ public class Utils : MonoBehaviour
 		return newNotes;
 	}
 
+	public static int[] Invert(int[] notes, int numInversions)
+	{
+		int[] invertedNotes = new int[notes.Length];
+		for (int i = 0; i < notes.Length; i++) 
+		{
+			int invertedIndex = (i + numInversions) % notes.Length;
+			invertedNotes [invertedIndex] = notes [i];
+		}
+		return invertedNotes;
+	}
+
 	public static int[] Shuffle(int[] notes)
 	{
 		for (int i = 0; i < notes.Length; i++) {
